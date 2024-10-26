@@ -1,0 +1,8 @@
+
+# dependencies
+node_modules
+
+# configuration file with identifiers
+src/config/db.js
+
+Project_Micro-services_course_V01.pdf
