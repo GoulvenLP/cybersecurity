@@ -1,0 +1,23 @@
+# launch kafka in Kraft mode
+# It will not require Zookeeper --> lighter and faster
+
+services:
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    ports:
+      - "4800:4800"
+    environment:
+      KAFKA_KRAFT_MODE: "true"
+      KAFKA_LISTENER_SCURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:4800"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data" # logs repository
+      KAFKA_CONTROLLER_LISTENER: "PLAINTEXT://0.0.0.0:4800"
+      KAFKA_PROCESS_ROLES: "broker,controller" #defines the process roles
+      KAFKA_LOG_RETENTION_HOURS: "600"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true" #automatic creation of topics
+      KAFKA_BROKER_ID: "1" #unique id of the broker
+    volumes:
+      - kafka_data:/var/lib/kafka/data #remains for kafka data
+volumes:
+  kafka_data:
