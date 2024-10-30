@@ -1,7 +1,15 @@
 const express = require('express');
 const cyberRoutes = require('./routes/cyberRoutes')
-
+const {connectProducer} = require('./models/producerModel');
+const fs = require('fs');
+const Database = require('better-sqlite3');
+const {DatabaseManager} = require('./config/db');
 //const cors = require('cors'); //TODO: reactivate?
+
+
+const dbManager = new DatabaseManager();
+//dbManager.initializeDB();
+
 const app = express();
 //const todosRoutes = require('./src/routes/todosRoutes');
 
@@ -10,6 +18,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 //app.use(cors());              //TODO: reactivate?
+
+// launch producer
+const startApp = async () => {
+    try {
+        await connectProducer();
+    } catch (error){
+        console.log('Failed to connect the producer')
+    }
+};
 
 //filter favicon.ico requests
 app.use((req, res, next) => {
@@ -31,5 +48,12 @@ app.listen(4500, () => {
     console.log("Server listening on port 4500");
 });
 
+
+//initServer().catch((error) => console.log('Error while initialising server: ', error));
+startApp();
+
 //var todoList = require('./todolist.js');
 //app.use('todolist/', todoList);
+module.exports = {
+    dbManager,
+};

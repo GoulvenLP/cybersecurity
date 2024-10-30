@@ -2,7 +2,7 @@
 # dependencies
 node_modules
 
-# configuration file with identifiers
-src/config/db.js
+# generated database
+database.db
 
 Project_Micro-services_course_V01.pdf

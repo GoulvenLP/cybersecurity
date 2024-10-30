@@ -1,14 +1,15 @@
 const ThreatDetectionModels = require('../models/ThreatDetectionModels');
+const {InjectionStatus} = require('../models/Incident');
 
 /**
  * Looks for suspicious patterns in a GET request
- * returns a boolean: true if a suspicious regex was found, else false
+ * returns an InjectionStatus object
  * @param {} url 
  */
-const checkUrl = async (url) => {
-    url = decodeURIComponent(url);
-    const isThreat = await checkIfInjection(url);
-    return isThreat;
+const checkUrl = async (req) => {
+    const url = decodeURIComponent(req.url);
+    const threatStatus = await checkIfInjection(url);
+    return threatStatus;
 };
 
 
@@ -18,15 +19,14 @@ const checkUrl = async (url) => {
  * @returns true if a suspicious regular expression was found, else false.
  */
 const checkBody = async (jsonObj) => {
-    let isThreat = false;
     for (const field of Object.keys(jsonObj)){
         const fieldValue = jsonObj[field] ? jsonObj[field].toString() : ""; 
-        isThreat = await checkIfInjection(fieldValue);
-        if (isThreat){
-            return isThreat;
+        const threatStatus = await checkIfInjection(fieldValue);
+        if (threatStatus.threat === true){
+            return new InjectionStatus(true, isThreat);
         }
     }
-    return isThreat;
+    return threatStatus;
 }
 
 
@@ -34,18 +34,18 @@ const checkBody = async (jsonObj) => {
  * Tests different patterns on a given string, to verify if they both
  *  match. A pattern corresponds to a filter to detect malicious attacks
  * @param {} stringValue : a string sent by a user.
- * @returns true if they match, else false.
+ * @returns an InjectionStatus object.
  */
-const checkIfInjection = async (stringValue) => {
-    let isThreat = false;
-    const patterns = await ThreatDetectionModels.getRegularExpressions();
-    for (pattern of patterns){
+const checkIfInjection = (stringValue) => {
+    const patterns = ThreatDetectionModels.getRegularExpressions();
+    for (const pattern of patterns){
+
         const p = new RegExp(pattern.regex_ftr, "gi");
         if(stringValue.match(p)){
-            return true;
+            return new InjectionStatus(true, pattern.type_typ);
         }
     }
-    return isThreat;
+    return new InjectionStatus(false, null);
 };
 
 

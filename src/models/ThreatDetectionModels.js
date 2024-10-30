@@ -1,26 +1,29 @@
-const db = require('../config/db');
+const Database = require('better-sqlite3');
+const path = require('path')
+const {dbManager} = require(path.join(__dirname, '../index'));
 
-/**
- * Sends a query to the database to retrieve all the regular expressions stored in the database that serve to identify any 
- * malicious attempt and their type.
- * @return: an array of JSON objects with two fields: 'regex_ftr' and 'type_typ'
- */
+
 const getRegularExpressions = () => {
-    // request that gets all regular expression stored in the db and their types
-    const sql = "SELECT regex_ftr, type_typ FROM cyb_filters JOIN cyb_types USING (id_typ) ORDER BY type_typ ASC;";
-    return new Promise ((resolve, reject) => {
-        db.query(sql, (err, results) =>  {
-            if(err) {
-                console.log('Error while trying to retrieve regular expressions: ', err);
-                results.status(500).json({ error: 'Server error' });
-                return;
-            }
-            resolve(results);
-        });
-    });
-};
-
-
+    let db;
+    try {
+        db = dbManager.getDB();
+        console.log('db is : ', db);
+        if (!db){
+            throw new Error('Database is not initialised');
+        }
+        const sqlRequest = "SELECT * FROM cyb_filters";
+        //const sqlRequest = "SELECT regex_ftr, type_typ FROM cyb_filters JOIN cyb_types USING (id_typ) ORDER BY type_typ ASC;";
+        const getRegExpAndTypes = db.prepare(sqlRequest);
+        const results = getRegExpAndTypes.all();
+        console.log('results are : ', results);   // DELETE
+        return results;
+    } catch (err){
+        console.log('with error name is ', err.message);
+        if (db && !db.inTransaction) {
+            throw err;
+        }
+    }
+}
 
 
 module.exports = {
