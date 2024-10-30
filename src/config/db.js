@@ -4,10 +4,28 @@ const path = require('path');
 
 
 class DatabaseManager {
-
+    
+    /**
+     * Singleton pattern to make sure the database is initialised only once!
+     */
     constructor(){
-        this._db = null;
-        this.initializeDB();
+        if (!DatabaseManager.instance) {
+            this._db = this.initializeDB();
+            DatabaseManager.instance = this;
+        }
+        return DatabaseManager.instance;
+    }
+
+
+    /**
+     * Static method to give external access to the method
+     * @returns the initialised database.
+     */
+    static getInstance = () => {
+        if (!this.instance){
+            DatabaseManager.instance = new DatabaseManager();
+        }
+        return DatabaseManager.instance._db;
     }
 
     initializeDB = () => {
@@ -16,20 +34,11 @@ class DatabaseManager {
             const sql = fs.readFileSync(path.join(__dirname, './database.sql'), 'utf8');
             this._db.exec(sql);
             console.log('Database initialised successfully');
+            return this._db;
         } catch (error) {
             throw new Error(error);
         };
     };
-
-
-    getDB(){
-        if(!this._db){
-            throw new Error('Database is not initialised');
-        } else {
-            return this._db;
-        }
-    }
-
 
     closeDB(){
         if (this._db) {
@@ -40,8 +49,6 @@ class DatabaseManager {
     }
 
 }
-
-
 
 module.exports = {
     DatabaseManager,

@@ -7,7 +7,8 @@ const {DatabaseManager} = require('./config/db');
 //const cors = require('cors'); //TODO: reactivate?
 
 
-const dbManager = new DatabaseManager();
+const dbManager = DatabaseManager.getInstance();
+console.log('DB IS: ', dbManager);
 //dbManager.initializeDB();
 
 const app = express();

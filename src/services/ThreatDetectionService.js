@@ -39,7 +39,7 @@ const checkBody = async (jsonObj) => {
 const checkIfInjection = (stringValue) => {
     const patterns = ThreatDetectionModels.getRegularExpressions();
     for (const pattern of patterns){
-
+        console.log('PATTERN: ', pattern.regex_ftr);
         const p = new RegExp(pattern.regex_ftr, "gi");
         if(stringValue.match(p)){
             return new InjectionStatus(true, pattern.type_typ);
