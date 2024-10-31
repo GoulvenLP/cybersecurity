@@ -1,6 +1,6 @@
 
-
 class Incident {
+    
     constructor(datetime, type, description, origin){
         this.datetime = datetime;
         this.type = type;
@@ -19,6 +19,8 @@ class Incident {
 }
 
 
+/*----------------------------------------------------- */
+
 class Get {
     constructor(url){
         this.url = url;
@@ -30,6 +32,9 @@ class Get {
         }
     }
 }
+
+
+/*----------------------------------------------------- */
 
 class InjectionStatus {
     constructor(status, type){
@@ -44,7 +49,6 @@ class InjectionStatus {
         }
     }
 }
-
 
 
 module.exports = {

@@ -1,6 +1,6 @@
 const express = require('express');
 const cyberRoutes = require('./routes/cyberRoutes')
-const {connectProducer} = require('./models/producerModel');
+const {connectProducer} = require('./models/IncidentProducerModel');
 const fs = require('fs');
 const Database = require('better-sqlite3');
 const {DatabaseManager} = require('./config/db');
@@ -28,6 +28,7 @@ const startApp = async () => {
         console.log('Failed to connect the producer')
     }
 };
+
 
 //filter favicon.ico requests
 app.use((req, res, next) => {

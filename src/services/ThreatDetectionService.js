@@ -8,7 +8,7 @@ const {InjectionStatus} = require('../models/Incident');
  */
 const checkUrl = async (req) => {
     const url = decodeURIComponent(req.url);
-    const threatStatus = await checkIfInjection(url);
+    const threatStatus = checkIfInjection(url);
     return threatStatus;
 };
 
@@ -18,10 +18,10 @@ const checkUrl = async (req) => {
  * @param {*} jsonObj a JSON object.
  * @returns true if a suspicious regular expression was found, else false.
  */
-const checkBody = async (jsonObj) => {
+const checkBody = (jsonObj) => {
     for (const field of Object.keys(jsonObj)){
         const fieldValue = jsonObj[field] ? jsonObj[field].toString() : ""; 
-        const threatStatus = await checkIfInjection(fieldValue);
+        const threatStatus = checkIfInjection(fieldValue);
         if (threatStatus.threat === true){
             return new InjectionStatus(true, isThreat);
         }
@@ -39,7 +39,6 @@ const checkBody = async (jsonObj) => {
 const checkIfInjection = (stringValue) => {
     const patterns = ThreatDetectionModels.getRegularExpressions();
     for (const pattern of patterns){
-        console.log('PATTERN: ', pattern.regex_ftr);
         const p = new RegExp(pattern.regex_ftr, "gi");
         if(stringValue.match(p)){
             return new InjectionStatus(true, pattern.type_typ);

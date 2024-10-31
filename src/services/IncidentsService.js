@@ -1,5 +1,5 @@
 const { Incident, Get } = require("../models/Incident");
-const {connectProducer, sendToProducer} = require('../models/producerModel');
+const {connectProducer, sendToProducer} = require('../models/IncidentProducerModel');
 
 /**
  * Creates an Incident object from parameters extracted from the original request, 
@@ -30,5 +30,4 @@ const sendIncident = async (incident) => {
 module.exports = {
     createIncident,
     sendIncident,
-
 };

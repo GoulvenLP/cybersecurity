@@ -26,4 +26,3 @@ const getRegularExpressions = () => {
 module.exports = {
     getRegularExpressions,
 }
-

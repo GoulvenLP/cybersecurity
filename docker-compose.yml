@@ -1,35 +1,40 @@
+networks:
+  kafka-network:
+
 services:
   kafka:
-    image: apache/kafka:3.8.0
+    image: 'apache/kafka:3.8.0'  # Utilisez une image Kafka compatible KRaft
     container_name: kafka
-    ports:
-      - "9092:9092"  # Port pour le broker
-      - "9093:9093"  # Port pour le contrôleur
     environment:
-      KAFKA_KRAFT_MODE: "true"
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093" 
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
-      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:0,CONTROLLER://0.0.0.0:0"  # Définir les listeners
-      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:9092"  # Ne pas inclure le listener CONTROLLER ici
-      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@127.0.0.1:9093"  # Utiliser localhost pour le contrôleur
       KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
-      KAFKA_PROCESS_ROLES: "broker,controller"  # Rôles du processus
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,CONTROLLER://kafka:9093"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_LOG_DIRS: "/var/lib/kafka/data"
-      KAFKA_LOG_RETENTION_HOURS: "600"
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_BROKER_ID: "1"
-      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"  # Définir le nom du listener du contrôleur
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"  # Auto-crée les topics si besoin
     volumes:
-      - kafka_data:/var/lib/kafka/data
+      - kafka_data:/var/lib/kafka/data  # Persistency
+    ports:
+      - "9092:9092"  # Port accessible pour l’API
+    networks:
+      - kafka-network
 
-  incident-service:
-    build: ./incidents  # chemin vers votre Dockerfile
-    environment:
-      KAFKA_BROKER: "kafka:9092"  # Configuration pour le producteur
+  api:
+    build: .
+    container_name: cybersecurity_cont
+    ports:
+      - 4500:4500
     depends_on:
-      - kafka  # Assurez-vous que Kafka est démarré avant ce service
-
+      - kafka  # Kafka doit être lancé avant l'API
+    environment:
+      KAFKA_BROKER: "kafka:9092"  # Point de connexion pour Kafka depuis l'API
+    networks:
+      - kafka-network
 
 volumes:
   kafka_data:
-
-  ## déclarer sous-réseau commun (-network) et hostname pour donner le nom du conteneur.

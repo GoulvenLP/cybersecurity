@@ -1,5 +1,6 @@
-const ThreatDetectionService = require("../services/ThreatDetectionService");
-const IncidentsService = require("../services/IncidentsService");
+const ThreatDetectionService = require('../services/ThreatDetectionService');
+const IncidentsService = require('../services/IncidentsService');
+const record = require('../services/ResponseService');
 
 
 /**
@@ -24,7 +25,7 @@ exports.checkGETRequest = async (req, res) => {
 
 
 /**
- * Controls if a POST request is a threat or not. If it is the case, triggers an incident.
+ * Controls if a POST request is a threat or not. If it is the case, triggers an incident to Kafka
  * @param {*} req 
  * @param {*} res 
  * @returns
@@ -40,6 +41,7 @@ exports.checkPOSTRequest = (req, res) => {
         if (threatStatus1.threat){
             const incident = IncidentsService.createIncident(req, threatStatus.type);
             IncidentsService.sendIncident(incident.toJSON());
+            record(incident);
         } else if (threatStatus2.threat) {
             const incident = IncidentsService.createIncident(req, threatStatus.type);
             IncidentsService.sendIncident(incident.toJSON());
