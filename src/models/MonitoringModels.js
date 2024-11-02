@@ -8,17 +8,24 @@ const fs = require('fs');
  * @param {} someEvent 
  */
 const registerAction = (someEvent) => {
-    const logFilePath = path.join(__dirname, 'logs.txt');
-    fs.readFile(path.join(__dirname, '../../logs.txt'), 'utf8', (err, data) => {
-        if (err){
-            console.log('An error occurred, couldn\'t access the log file: ', err);
-        } else {
-            logsUpdated = newLog.concat(data);
-            fs.writeFile(logFilePath, logsUpdated, (err) => {
-                console.log('An error occurred, couldn\'t update the log file: ', err);
-            });
-        }
-    });
+    const logFilePath = path.join(__dirname, '../../logs.txt');
+    try {
+        fs.readFile(logFilePath, 'utf8', (err, data) => {
+            if (err){
+                console.log('An error occurred, couldn\'t access the log file: ', err);
+            } else {
+                let logsUpdated = someEvent.concat('\n', data); //invert display
+                fs.writeFile(logFilePath, logsUpdated, (err) => {
+                    if (err) {
+                        console.log('An error occurred, couldn\'t update the log file: ', err);
+                    }
+                });
+            }
+        });
+
+    } catch (error) {
+        console.error('Log file not found');
+    }
 
 }
 
@@ -29,15 +36,15 @@ const registerAction = (someEvent) => {
  * @param {} information 
  */
 const discomposeInformation = (information) => {
-    let discomposedInformation = information.datetime;
-    discomposeInformation.concat(' [', information.type, '] ');
-    discomposeInformation.concat(information.description, ' from ');
-    discomposeInformation.concat(information.origin);
-    return discomposedInformation;
+    let discomposedInfo = '['.concat(information.datetime, '] ');
+    discomposedInfo = discomposedInfo.concat('[', information.type, '] ');
+    discomposedInfo = discomposedInfo.concat('[FROM IP= ', information.origin, '] ');
+    discomposedInfo =  discomposedInfo.concat('(CONTENT=', information.description, ')');
+    return discomposedInfo;
 }
 
 
 module.exports = {
-    registerAction,
     discomposeInformation,
+    registerAction,
 }

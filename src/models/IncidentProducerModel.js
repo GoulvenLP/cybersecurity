@@ -1,28 +1,26 @@
 const { Kafka } = require('kafkajs');
 
+// Create Kafka client
 const kafka = new Kafka({
-    clientId: 'incident-service',
-    brokers: ['127.0.0.1:9092'], //replace localhost by 'kafka' if API on docker
+    clientId: 'incidents_service',
+    brokers: ['127.0.0.1:9092'],    // Change when dockerised
 });
 
+// Create a single producer instance
 const producer = kafka.producer();
 
 const connectProducer = async () => {
     await producer.connect();
-    console.log('Producer connected');
+    console.log('Producer connected successfully.');
 };
 
-const sendToProducer = async (incident) => {
-    await producer.send({
-        topic: 'incidents',
-        messages: [ { value: JSON.stringify(incident) }
-        ],
-    });
-    console.log('Incident sent: ', incident);
+const disconnectProducer = async () => {
+    await producer.disconnect();
+    console.log('Producer disconnected successfully.');
 };
 
-
-module.exports = {
+module.exports = {
+    producer,
     connectProducer,
-    sendToProducer,
+    disconnectProducer,
 };

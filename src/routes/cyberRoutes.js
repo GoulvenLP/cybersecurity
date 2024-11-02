@@ -5,6 +5,6 @@ const controller = require('../controller/Controller');
 
 router.get("/*", controller.checkGETRequest);
 
-router.post("/*", controller.checkPOSTRequest);
+//router.post("/*", controller.checkPOSTRequest);
 
 module.exports = router;

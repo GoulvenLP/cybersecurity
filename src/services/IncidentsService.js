@@ -1,5 +1,5 @@
-const { Incident, Get } = require("../models/Incident");
-const {connectProducer, sendToProducer} = require('../models/IncidentProducerModel');
+const { Incident} = require("../models/Incident");
+const {producer} = require('../models/IncidentProducerModel');
 
 /**
  * Creates an Incident object from parameters extracted from the original request, 
@@ -18,13 +18,20 @@ const createIncident = (req, typeOfAttack) => {
 
 
 /**
- * Sends an incident to Kafka
+ * Sends an incident to Kafka through a producer
  * @param {} incident 
  */
 const sendIncident = async (incident) => {
-    await sendToProducer(incident);
+    try {
+        await producer.send({
+            topic: 'incidents',
+            messages: [{ value: JSON.stringify(incident) }],
+        });
+        console.log('Incident sent');
+    } catch (error) {
+        console.error('Error while sending an incident: ', error);
+    }
 };
-
 
 
 module.exports = {

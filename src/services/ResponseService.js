@@ -5,13 +5,14 @@ const { discomposeInformation, registerAction } = require("../models/MonitoringM
  * Method that adds a log to the log file
  * @param {} data a JSON object
  */
-const record = (data) => {
-    aLog = discomposeInformation(data);
-    registerAction(aLog);
-
-
+const manage = (message) => {
+    if (!message){
+        console.log('Invalid incident: ', message);
+    }
+    const prettyMessage = discomposeInformation(JSON.parse(message));
+    registerAction(prettyMessage);
 }
 
 module.exports = {
-    record,
+    manage,
 }
