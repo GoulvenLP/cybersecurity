@@ -5,4 +5,8 @@ node_modules
 # generated database
 database.db
 
+# pdf
 Project_Micro-services_course_V01.pdf
+
+# jwt
+.env

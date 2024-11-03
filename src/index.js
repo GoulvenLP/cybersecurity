@@ -1,5 +1,9 @@
+require('dotenv').config(); //for an access to secret file
+const cookieParser = require('cookie-parser');
+
 const express = require('express');
 const cyberRoutes = require('./routes/cyberRoutes')
+const manageRoutes = require('./routes/manageRoutes');
 const {connectProducer, disconnectProducer} = require('./models/IncidentProducerModel');
 const { runConsumer } = require('./models/IncidentConsumerModel');
 const fs = require('fs');
@@ -13,10 +17,10 @@ const app = express();
 
 // General middlewares for post requests
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 //app.use(cors());              //TODO: reactivate?
 
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const startProducer = async () => {
     try {
@@ -47,9 +51,10 @@ app.use((req, res, next) => {
     }
 });
 
+
 // Routes
+app.use("/manage", manageRoutes);
 app.use("/", cyberRoutes);
-// app.use("/tasks", todosRoutes);
 // app.use("/tasks/pending", todosRoutes);
 // app.use("/tasks/([0-9]+)", todosRoutes); //update && delete
 
