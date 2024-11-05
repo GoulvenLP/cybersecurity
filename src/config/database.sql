@@ -18,8 +18,8 @@ CREATE TABLE cyb_users (
     id_usr INTEGER NOT NULL,
     username_usr TEXT NOT NULL,
     password_usr TEXT NOT NULL,
-    status_usr TEXT NOT NULL,   -- manage right privileges
-    active_usr TEXT NOT NULL,   -- can access to the API or not
+    role_usr TEXT NOT NULL,   -- admin | staff
+    status_usr TEXT NOT NULL,   -- active | inactive
     email_usr TEXT,
     salt_usr TEXT NOT NULL,
     id_con INT NOT NULL,
@@ -39,8 +39,8 @@ CREATE TABLE cyb_filters (
     id_ftr INTEGER NOT NULL,
     regex_ftr TEXT NOT NULL,
     description_ftr TEXT,
-    created_ftr DATETIME,
-    last_update_ftr DATETIME,
+    created_ftr TEXT,
+    last_update_ftr TEXT,
     id_typ INTEGER NOT NULL,
     id_con INTEGER NOT NULL,
     PRIMARY KEY (id_ftr),
@@ -55,10 +55,10 @@ INSERT INTO cyb_connect (id_con, username_con) VALUES (1, 'cyberadmin');
 INSERT INTO cyb_connect (id_con, username_con) VALUES (2, 'toto');
 
 --users table
-INSERT INTO cyb_users (id_usr, username_usr, password_usr, status_usr, active_usr, email_usr, salt_usr, id_con)
+INSERT INTO cyb_users (id_usr, username_usr, password_usr, role_usr, status_usr, email_usr, salt_usr, id_con)
 VALUES (1, 'cyberadmin', 'cef1e0559cb4f936240055c95deba4431b6cfe4324696ccd5fbdacd16516649f02b9ba64deb6be22ab2663d6442833ea82f0d2bcce2426aa0d439531b0dabbdb', 'admin', 'active', 'cyberadmin@adm.org', 'n_af/jk*f50D9-g><+q98mkf=1Pm3.9', 1);
 
-INSERT INTO cyb_users (id_usr, username_usr, password_usr, status_usr, active_usr, email_usr, salt_usr, id_con)
+INSERT INTO cyb_users (id_usr, username_usr, password_usr, role_usr, status_usr, email_usr, salt_usr, id_con)
 VALUES (2, 'toto', 'c416e5de978781931c9f02ca576490ab8312df5028db1f61aa471e6b7167fcaeeb58b81f47385ad4bd056839a7b7e3e6185255c94d35a367169d71c1873a01ee', 'staff', 'active', 'cybertoto@admn.org', 'j45)Zb98%h+wv76X!$4*T{32rB§s?E', 2);
 
 -- ******************* FILTERS ******************************

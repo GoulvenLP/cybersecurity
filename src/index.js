@@ -55,8 +55,6 @@ app.use((req, res, next) => {
 // Routes
 app.use("/manage", manageRoutes);
 app.use("/", cyberRoutes);
-// app.use("/tasks/pending", todosRoutes);
-// app.use("/tasks/([0-9]+)", todosRoutes); //update && delete
 
 
 app.listen(4500, () => {

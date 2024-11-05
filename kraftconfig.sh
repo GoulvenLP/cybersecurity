@@ -31,6 +31,7 @@ docker run -d \
     -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093 \
     -e KAFKA_PROCESS_ROLES=broker,controller \
     -e KAFKA_NODE_ID=1 \
+    -e KAFKA_AUTO_CREATE_TOPICS_ENABLE=false \
     -e KAFKA_LOG_DIRS=/var/lib/kafka/data \
     -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
     $KAFKA_IMAGE

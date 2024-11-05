@@ -1,13 +1,14 @@
 const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv');
-const { 
+const { requesterIsAdmin, requesterIsAnyAllowed } = require('../services/FiltersService');
+const { getUserStatus, getUserRole } = require('../models/ManagersModels');
+const {
     newUser,
     retrieveUser,
-    findUserID,
     deleteUserByID,
     verifyAuthentication,
     getUserID,
-    getTargetStatus,
+    getTargetRole,
+    getAllUsers,
  } = require('../services/ManagersService');
  
  /**
@@ -41,11 +42,18 @@ const connect = (req, res) => {
 
 
 /**
- * Creates a new user in the database
+ * Creates a new user in the database.
+ * This method is available to active admins only.
  * @param {*} req 
  * @param {*} res 
  */
 const createUser = (req, res) => {
+    const authorized = requesterIsAdmin(req.user.id);
+    // status inactive ; role is not an admin
+    if (authorized){
+        req.status(403).send('You do not have the right privileges for such operation');
+        return;
+    }
     const created = newUser(req.body);
     if (created) {
         res.status(200).send('New user successfully created');
@@ -62,8 +70,12 @@ const createUser = (req, res) => {
  * @param {*} res 
  */
 const deleteUser = (req, res) => {
-    const userID = req.params.id;
-    const deletion = deleteUserByID(userID);
+    if (authorized){
+        req.status(403).send('You do not have the right privileges for such operation');
+        return;
+    }
+    const targetID = req.params.id;
+    const deletion = deleteUserByID(targetID);
     if (deletion){
         console.log(`User of id ${req.params.id} deleted successfully`);
         res.status(200).send(`Member of id ${req.params.id} deleted successfully`);
@@ -75,14 +87,20 @@ const deleteUser = (req, res) => {
 
 
 /**
- * Gets the whole informations about a specific user
+ * Gets the whole informations about a specific user. A registered user can only get his own data.
+ * An admin can get any user's data.
  * @param {*} req 
  * @param {*} res 
  */
 const getUser = (req, res) => {
     //verify the privileges level of the demander
-    const status = getTargetStatus(req.user.id);
-    if (status === 'admin' || (parseInt(req.params.id) === parseInt(req.user.id)) ){
+    const status = getUserStatus(req.user.id);
+    if (status === 'inactive'){
+        res.status(403).send('You do not have the privileges for such request');
+        return;
+    }
+    const role =  getTargetRole(req.user.id);
+    if (role === 'admin' || (parseInt(req.params.id) === parseInt(req.user.id)) ){
         const userID = req.params.id;
         const data = retrieveUser(userID);
         res.status(200).send(data);
@@ -103,7 +121,50 @@ const disconnect = (req, res) => {
     return res.status(200).send('Disconnected')
 }
 
+const getUsers = (req, res) => {
+    const authorized = requesterIsAdmin(req.user.id);
+    if (!authorized){
+        res.status(401).send('You do not have the privileges for such request');
+    } else {
+        const usersData = getAllUsers();
+        res.status(200).send(usersData);
+    }
 
+}
+
+
+/**
+ * Updates a user in the database. Both active admin and staff members are allowed to do this BUT
+ * only an admin can update another user data. A staff member can only update his own data.
+ * In addition to this, only the admin can modifiy the role and the status of anyone. an admin cannot 
+ * change his own status (this would be weird)
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
+const updateUser = (req, res) => {
+    const authorized = requesterIsAnyAllowed(req.user.id);
+    if (!authorized){
+        res.status(403).send('You do not have the privileges for such operation');
+        return;
+    }
+    const role = getUserRole(req.user.id);
+    // member of the staff trying to update another member
+    let update;
+    if (role !== 'admin' && req.user.id != req.params.id){
+        res.status(403).send('You do not have the privileges for such operation');
+        return;
+    } else if (role === 'staff' && req.user.id === req.params.id){
+        update = updateUsr_staff({userID: req.user.id, targetID: req.params.id, password: req.body.password, status: req.body.status, role: req.body.role});
+    } else {
+        update = updateUsr_admin(req.body);
+    }
+    if (update){
+        res.status(200).send('User updated successfully');
+    } else {
+        res.status(400)
+    }
+}
 
 
 module.exports = {
@@ -111,5 +172,7 @@ module.exports = {
     createUser,
     disconnect,
     getUser,
+    getUsers,
     deleteUser,
+    updateUser,
 }

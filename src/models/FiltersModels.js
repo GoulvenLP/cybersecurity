@@ -82,7 +82,11 @@ const getIDofType = (typeName) => {
         }
         const req = db.prepare('SELECT id_typ AS id FROM cyb_types WHERE type_typ = ?;');
         const type = req.get(typeName);
-        return type.id;
+        if (type){
+            return type.id;
+        } else {
+            return undefined;
+        }
 
     } catch (err){
         console.log('Error while trying to access a specific ID for a type of filter ', err.message);
@@ -158,7 +162,7 @@ const removeFilter = (filterID) => {
 
 
 /**
- * Counts the number of ID associated to a specific filter ID
+ * Counts the number of occurrences of an ID given as a parameter
  * @param {*} filterID 
  * returns an integer
  */
@@ -179,7 +183,11 @@ const countFilterID = (filterID) => {
     }
 }
 
-
+/**
+ * Counts the number of occurrences of a specific ID
+ * @param {*} typeID an integer
+ * @returns an integer
+ */
 const countTypesOfID = (typeID) => {
     try {
         db = DatabaseManager.getInstance();
@@ -197,6 +205,66 @@ const countTypesOfID = (typeID) => {
     }
 }
 
+/**
+ * Updates a filter whose ID is given as a parameter
+ * @param {*} filterID 
+ */
+const updateFilter = (update) => {
+    try {
+        db = DatabaseManager.getInstance();
+        if (!db){
+            throw new Error('Database is not initialised');
+        }
+        const newDate = new Date().toISOString();
+        const req = db.prepare('UPDATE cyb_filters SET regex_ftr = ?, description_ftr = ?, last_update_ftr = ?, id_typ = ?, id_con = ? WHERE id_ftr = ?;');
+        req.run(update.regex, update.description, newDate, parseInt(update.typeID), parseInt(update.userID), parseInt(update.id));
+    } catch (err){
+        console.log('Error while trying to count the number of types associated to an ID ', err.message);
+        if (db && !db.inTransaction) {
+            throw err;
+        }
+    }
+}
+
+/**
+ * Gets fields from a specific filter whose ID is given as a parameter.
+ * @param {*} filterID 
+ * returns an object with (fieldnames) : { regex, description, lastupdate, typeID, userID }
+ */
+const getFilterContent = (filterID) => {
+    try {
+        db = DatabaseManager.getInstance();
+        if (!db){
+            throw new Error('Database is not initialised');
+        }
+        const req = db.prepare('SELECT regex_ftr AS regex, description_ftr AS description, last_update_ftr as lastupdate, id_typ AS typeID, id_con AS userID FROM cyb_filters WHERE id_ftr = ?;');
+        const filter = req.get(parseInt(filterID));
+        return filter;
+    } catch (err){
+        console.log('Error while trying get a filter\'s data ', err.message);
+        if (db && !db.inTransaction) {
+            throw err;
+        }
+    }
+}
+
+const getFiltersTypeID = (filterID) => {
+    try {
+        db = DatabaseManager.getInstance();
+        if (!db){
+            throw new Error('Database is not initialised');
+        }
+        const req = db.prepare('SELECT id_typ FROM cyb_filters WHERE id_ftr = ?;');
+        const filter = req.get(parseInt(filterID));
+        return filter.id_typ;
+    } catch (err){
+        console.log('Error while trying to retrieve an ID type ', err.message);
+        if (db && !db.inTransaction) {
+            throw err;
+        }
+    }
+}
+
 
 module.exports = {
     getAllFilters,
@@ -208,4 +276,7 @@ module.exports = {
     insertNewType,
     insertNewFilter,
     removeFilter,
+    getFilterContent,
+    updateFilter,
+    getFiltersTypeID,
 }

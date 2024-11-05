@@ -1,2 +1,0 @@
-[02/11/2024 22:48:01] [SQL ATTACK] [FROM IP= ::ffff:127.0.0.1] (CONTENT=/?toto=%27%20or%201%20=1;)
-[02/11/2024 11:44:43] [SQL ATTACK] [FROM IP= ::ffff:127.0.0.1] (CONTENT=/?toto=%27%20or%201%20=1;)

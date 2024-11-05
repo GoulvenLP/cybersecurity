@@ -3,13 +3,15 @@ const {
     getFlt,
     updateFlt,
     deleteFlt,
+    requesterIsAdmin,
  } = require('../services/FiltersService');
  const {
+    getUserRole,
     getUserStatus,
  } = require('../models/ManagersModels')
 const ThreatDetectionService = require('../services/ThreatDetectionService');
 const IncidentsService = require('../services/IncidentsService');
-const { request } = require('express');
+const { countTypesOfID } = require('../models/FiltersModels');
 
 
 /**
@@ -32,16 +34,16 @@ const checkGETRequest = async (req, res, next) => {
 }
 
 /**
- * Creates a new filter from a POST request. Only admins are allowed to create filters
+ * Creates a new filter from a POST request. Only active admins are allowed to create filters
  * @param {*} req 
  * @param {*} res 
  */
  const createFilter = (req, res) => {
     const userID = parseInt(req.user.id);
-    const userStatus = getUserStatus(userID);
-    //allow only admins to create filters
-    if (userStatus === 'staff') {
+    const authorized = requesterIsAdmin(userID)
+    if (!authorized) {
         res.status(403).send('You don\'t have the right privileges for this operation');
+        return;
     }
     const request = {userID: userID, regex: req.body.regex, description: req.body.description, type: req.body.type};
     const created = createFlt(request);
@@ -51,17 +53,21 @@ const checkGETRequest = async (req, res, next) => {
         res.status(401).send('New filter creation failed');
     }
 
-
  };
 
 
  /**
   * Retrieves all the filters of the database and their related informations.
-  * Both staff members and admins can have access to these informations
+  * Both staff members and admins can have access to these informations but their account must be active
   * @param {*} req 
   * @param {*} res 
   */
  const getFilters = (req, res) => {
+    const status = getUserStatus(req.user.id);
+    if (status === 'inactive'){
+        res.status(403).send('You do not have the privileges to access this request');
+        return;
+    }
     const filters = getFlt(req);
     if (filters !== null){
         res.status(200).send(filters);
@@ -70,19 +76,43 @@ const checkGETRequest = async (req, res, next) => {
     }
  };
 
- const updateFilter = (req, res) => {
+ /**
+  * Updates a filter. Only an active admin can proceed such operation.
+  * the update must be introduced into such object: { id, regex, description, typeName }
+  * @param {*} req 
+  * @param {*} res 
+  * @returns 
+  */
+ const updateAFilter = (req, res) => {
+    const authorized = requesterIsAdmin(req.user.id);
+    if (!authorized){
+        res.status(403).send('You do not have the privileges for this operation');
+        return;
+    }
+    const nbOccurrencesType = countTypesOfID(req.params.id);
+    if (nbOccurrencesType === 0){
+        res.status(401).send('Filter to update not found');
+        return;
+    }
+    const updated = updateFlt({id: req.params.id, regex: req.body.regex, description: req.body.description, typeName: req.body.typeName, userID: req.user.id});
+    if (updated){
+        res.status(200).send('Filter updated successfully');
+    } else {
+        res.status(401).send('Update on filter failed');
+    }
 
  };
 
 
  /**
-  * Deletes a filter from the database. Only an admin can process on such move.
+  * Deletes a filter from the database. Only an active admin can process on such move.
   * @param {*} req
   * @param {*} res 
   */
  const deleteFilter = (req, res) => {
-    if (!req.user || !req.user.id){
-        res.status(401).send('User not authenticated or ID missing');
+    const authorized = requesterIsAdmin(req.user.id);
+    if (!authorized){
+        res.status(403).send('You do not have the privileges for this operation');
         return;
     }
     const requesterID = parseInt(req.user.id);
@@ -91,9 +121,9 @@ const checkGETRequest = async (req, res, next) => {
         res.status(500).send('Argument missing');
         return;
     }
-    const userStatus = getUserStatus(requesterID);
+    const userRole = getUserRole(requesterID);
     //allow only admins to create filters
-    if (userStatus === 'staff') {
+    if (userRole === 'staff') {
         res.status(403).send('You don\'t have the right privileges for this operation');
         return;
     }
@@ -111,6 +141,6 @@ const checkGETRequest = async (req, res, next) => {
     checkGETRequest,
     createFilter,
     getFilters,
-    updateFilter,
+    updateAFilter,
     deleteFilter,
  }

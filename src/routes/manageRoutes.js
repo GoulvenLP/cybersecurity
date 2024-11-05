@@ -6,12 +6,13 @@ const { checkGETRequest } = require('../controller/CyberController');
 
 
 router.post('/login', managersController.connect);
+router.get('/logout', authenticateToken, checkGETRequest, managersController.disconnect);
 
 //checkGETRequest,
-router.get('/account/:id', authenticateToken, managersController.getUser);
-router.get('/logout', authenticateToken, managersController.disconnect);
-
 router.post('/create', managersController.createUser);
+router.get('/account/:id', authenticateToken, checkGETRequest, managersController.getUser);
+router.get('/account', authenticateToken, checkGETRequest, managersController.getUsers);
+router.put('update/:id', authenticateToken, checkGETRequest, managersController.updateUser);
 router.delete('/delete/:id', managersController.deleteUser);
 
 

@@ -7,9 +7,12 @@ const {
     insertNewType,
     insertNewFilter,
     countTypesOfID,
-    removeFilter, 
+    removeFilter,
+    getFilterContent,
+    updateFilter,
+    getFiltersTypeID,
 } = require('../models/FiltersModels');
-const { getUserStatus } = require('../models/ManagersModels');
+const { getUserRole, getUserStatus } = require('../models/ManagersModels');
 
 /**
  * Adds a filter to the database
@@ -43,10 +46,21 @@ const createFlt = (newf) => {
 };
 
 
-const authorizedRequester = (userID) => {
+const requesterIsAdmin = (userID) => {
+    const role = getUserRole(userID);
     const status = getUserStatus(userID);
     let authorisation = false;
-    if (status === 'admin' || status === 'staff'){
+    if (role === 'admin' && status === 'active'){
+        authorisation = true;
+    }
+    return authorisation;
+}
+
+const requesterIsAnyAllowed = (userID) => {
+    const role = getUserRole(userID);
+    const status = getUserStatus(userID);
+    let authorisation = false;
+    if ((role === 'admin' || role === 'staff') && status === 'active'){
         authorisation = true;
     }
     return authorisation;
@@ -62,7 +76,7 @@ const getFlt = (req) => {
     let authorized = null;
     if (req.user && req.user.id){
         const userID = req.user.id;
-        authorized = authorizedRequester(userID);
+        authorized = requesterIsAnyAllowed(userID);
     } else {
         return null;
     }
@@ -75,8 +89,45 @@ const getFlt = (req) => {
 };
 
 
+/**
+ * Updates a filter.
+ * The parameter must be of shape: { id, regex, description, typeName, userID }
+ * If any field given as a parameter is an empty string, the concerned field will be kept same in the database.
+ * @param {*} newFilter 
+ * If the filter does not exist, returns false. If the userID is not found, returns false
+ * Returns true by default -- this is not the best way to confirm an operation :-(
+ */
 const updateFlt = (newFilter) => {
-    const toto = null;
+    // Verify if the filter exists
+    const nb = countFilterID(newFilter.id);
+    if (nb === 0){
+        return false;
+    }
+    //get the type corresponding to the typeID. If it does not fit, create a new type
+    const currentFilter = getFilterContent(newFilter.id);
+    let typeID = null;
+    if (newFilter.typeName === "") { //keep the current type
+        typeID = getFiltersTypeID(newFilter.id);
+    } else { //the type is assigned
+        typeID = getIDofType(newFilter.typeName);
+        if (!typeID){ //no corresponding type -> create a new type
+            typeID = getNextIDType();
+            insertNewType({id: typeID, type: newFilter.typeName});
+            const nbID = countTypesOfID(typeID);
+            if (nbID !== 1){ //failure on type creation
+                return false;
+            }
+        }
+    }
+    // fill the empty fields of the new filter with the content of the current filter fields
+    if (newFilter.regex === '') { newFilter.regex = currentFilter.regex; }
+    if (newFilter.description === '') { newFilter.description = currentFilter.description; }
+    if (newFilter.typeID === '') { //typeID to use if the current one
+        updateFilter({id: newFilter.id, regex: newFilter.regex, description: newFilter.description, typeID: currentFilter.typeID, userID: newFilter.userID});
+    } else { //
+        updateFilter({id: newFilter.id, regex: newFilter.regex, description: newFilter.description, typeID: typeID, userID: newFilter.userID});
+    }
+    return true; // <-- smells a bit like bullshit since there is no verification made :-(
 }
 
 
@@ -98,9 +149,12 @@ const deleteFlt = (filterID) => {
 }
 
 
+
 module.exports = {
     createFlt,
     getFlt,
     updateFlt,
     deleteFlt,
+    requesterIsAdmin,
+    requesterIsAnyAllowed,
 }

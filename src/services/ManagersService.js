@@ -1,22 +1,29 @@
 const {DatabaseManager} = require('../config/db');
 const { createHash } = require('crypto');
 const { 
-    getID,
+    generateSalt,
     getNextUserID,
     countUsername,
     getUserData,
     encryptAndSaltPassword,
-    countByID,
     comparePasswords,
+    countByID,
     completeUserDeletion,
     getSalt,
+    getID,
+    getUserRole,
     getUserStatus,
+    getAllUsersData,
+    getNameFromID,
+    updateInUsr,
+    updateInCon,
+    getPassword,
 } = require('../models/ManagersModels');
 
 
 /**
  * Creates and adds a new user to the database. The password is added in a SH512 encryption.
- * @param {*} newUser JSON object containing the username, password, status and email
+ * @param {*} newUser JSON object containing the username, password, role and email
  * @returns 
  */
 const newUser = (newUser) => {
@@ -35,7 +42,7 @@ const newUser = (newUser) => {
         //create user in the cyb_connect table then into cyb_users -- this is a transaction
         const transact = db.transaction((newUser) => {
             const createUsrInConnectTable = db.prepare('INSERT INTO cyb_connect (id_con, username_con) VALUES (?, ?);');
-            const createUsrInUsersTable = db.prepare('INSERT INTO cyb_users (id_usr, username_usr, password_usr, status_usr, active_usr, email_usr, salt_usr, id_con)  VALUES (?, ?, ?, ?, ?, ?, ?, ?);');
+            const createUsrInUsersTable = db.prepare('INSERT INTO cyb_users (id_usr, username_usr, password_usr, role_usr, status_usr, email_usr, salt_usr, id_con)  VALUES (?, ?, ?, ?, ?, ?, ?, ?);');
 
             createUsrInConnectTable.run(id, newUser.username);
             createUsrInUsersTable.run(id, newUser.username, saltAndPwd.password, 'squad', 'active', newUser.email, saltAndPwd.salt, id); //same id for both tables
@@ -87,7 +94,7 @@ const verifyAuthentication = (username, password) => {
  * @param {*} userID 
  * @returns true if the ID is found, else false
  */
-const findUserID = (userID) => {
+const findIfUserID = (userID) => {
     const number = countByID(userID);
     return number == 1;
 }
@@ -99,7 +106,7 @@ const findUserID = (userID) => {
  */
 const deleteUserByID = (userID) => {
     completeUserDeletion(userID);
-    const isFound = findUserID(userID);
+    const isFound = findIfUserID(userID);
     return !isFound; //returns false if the user is found --> deletion would have failed
 }
 
@@ -114,22 +121,132 @@ const getUserID = (username) => {
 
 
 /**
- * Gets the status of a user whose ID is given as a parameter
+ * Gets the role of a user whose ID is given as a parameter
  * @param {*} id 
  */
-const getTargetStatus = (id) => {
-    const status = getUserStatus(id);
-    return status;
+const  getTargetRole = (id) => {
+    const role = getUserRole(id);
+    return role;
 }
 
+
+const getAllUsers = () => {
+    const allUsers = getAllUsersData();
+    return allUsers;
+}
+
+
+/**
+ * Updates a user data in a few steps with the admin rights
+ * @param {*} update 
+ */
+const updateUsr_admin = (update) => {
+    // manage username
+    let username = getNameFromID(update.targetID);
+    if (update.username !== ''){ //username changed
+        if (username !== update.username){ //if the username has changed -> verify if it is not already in the database
+            number = countUsername(username);
+            if (number === 1){ //there is already a user with that name
+                return false;
+            }
+        }
+        username = update.username;
+    }
+    const userData = getUserData(update.targetID); //one request instead of 3
+    // manage email
+    let email = userData.email;
+    if (update.email !== '') {
+        if (email !== update.email){
+            email = update.email;
+        }
+    }
+    //manage password
+    credentials = encryptAndSaltPassword(update.password);
+    let salt = null;
+    if (update.password === ''){ //keep the current password
+        salt = getSalt(update.targetID);
+        const pwd = getPassword(update.targetID);
+        credentials = { password: pwd, salt: salt};
+    } else {
+        if (update.password === credentials.password){ //same password
+            salt = getSalt(update.targetID);
+            credentials = { password: update.password, salt: salt };
+        }
+    }
+    let role = null;
+    let status = null;
+    // an admin cannot modify his own roles or status
+    if (update.userID === update.targetID){ //do not modify these fields
+        role = userData.role;
+        status = userData.status;
+    } else {
+        role = update.role;
+        status = update.status;
+        if (update.role === ''){ //keep the current role
+            role = userData.role;
+        }
+        if (update.status === ''){
+            status = userData.status;
+        }
+    }
+    updateAUser({ id: update.targetID, password: credentials.password, salt: credentials.salt, email: email, role: role, status: status });
+    return true;
+}
+
+/**
+ * Updates a user data in a few steps with the staff rights
+ * A staff member cannot modify nor his role nor his status.
+ * @param {*} update 
+ */
+const updateUsr_staff = (update) => {
+    // manage username
+    let username = getNameFromID(update.targetID);
+    if (update.username !== ''){ //username changed
+        if (username !== update.username){ //if the username has changed -> verify if it is not already in the database
+            number = countUsername(username);
+            if (number === 1){ //there is already a user with that name
+                return false;
+            }
+        }
+        username = update.username;
+    }
+    const userData = getUserData(update.targetID); //one request instead of 3
+    // manage email
+    let email = userData.email;
+    if (update.email !== '') {
+        if (email !== update.email){
+            email = update.email;
+        }
+    }
+    //manage password
+    credentials = encryptAndSaltPassword(update.password);
+    let salt = null;
+    if (update.password === ''){ //keep the current password
+        salt = getSalt(update.targetID);
+        const pwd = getPassword(update.targetID);
+        credentials = { password: pwd, salt: salt};
+    } else {
+        if (update.password === credentials.password){ //same password
+            salt = getSalt(update.targetID);
+            credentials = { password: update.password, salt: salt };
+        }
+    }
+   const role = userData.role;
+   const status = userData.role
+    updateAUser({ id: update.targetID, password: credentials.password, salt: credentials.salt, email: email, role: role, status: status });
+    return true;
+}
 
 
 module.exports = {
     newUser,
-    retrieveUser,
-    findUserID,
     deleteUserByID,
-    verifyAuthentication,
+    retrieveUser,
+    getAllUsers,
     getUserID,
-    getTargetStatus,
+    findIfUserID,
+    verifyAuthentication,
+    getTargetRole,
+    updateUsr_admin,
+    updateUsr_staff,
 }

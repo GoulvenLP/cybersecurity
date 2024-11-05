@@ -74,8 +74,23 @@ const getUserData = (userID) => {
     if (!db){
         throw new Error('Database is not initialised');
     }
-    const idReq = db.prepare('SELECT username_usr, status_usr, active_usr, email_usr FROM cyb_users WHERE id_usr = ?;');
+    const idReq = db.prepare('SELECT username_usr, role_usr, status_usr, email_usr FROM cyb_users WHERE id_usr = ?;');
     const userData = idReq.get(parseInt(userID));
+    return userData;
+}
+
+
+/**
+ * Returns all data related to a specific username                         ///////////////////MODIFY ASAP
+ * @param {*} userID: id of the user
+ */
+const getAllUsersData = () => {
+    db = DatabaseManager.getInstance();
+    if (!db){
+        throw new Error('Database is not initialised');
+    }
+    const idReq = db.prepare('SELECT username_usr, role_usr, status_usr, email_usr FROM cyb_users;');
+    const userData = idReq.all();
     return userData;
 }
 
@@ -197,23 +212,136 @@ const getID = (username) => {
 
 
 /**
- * returns the status of a user which id is given as a parameter. Status can be "admin" or "staff"
+ * Returns the role of a user which id is given as a parameter. role can be "admin" or "staff"
  * @param {*} id 
  */
-const getUserStatus = (id) => {
+const getUserRole = (id) => {
+    try {
+        db = DatabaseManager.getInstance();
+        if (!db){
+            throw new Error('Database is not initialised');
+        }
+        const req = db.prepare('SELECT role_usr FROM cyb_users WHERE id_usr = ?;');
+        const role = req.get(id);
+        return role.role_usr;
+    } catch (error) {
+        console.log('Error while trying to retrieve a user role');
+        throw new error('Error while trying to retrieve a user role: ', error)
+    }
+}
+
+
+
+/**
+ * Gets and returns the status of a user which ID is given as a parameter
+ * @param {*} userID an integer 
+ * @returns a string: 'active' or 'inactive'
+ */
+const getUserStatus = (userID) => {
     try {
         db = DatabaseManager.getInstance();
         if (!db){
             throw new Error('Database is not initialised');
         }
         const req = db.prepare('SELECT status_usr FROM cyb_users WHERE id_usr = ?;');
-        const status = req.get(id);
-        return status.status_usr;
-    } catch (error) {
-        console.log('Error while trying to retrieve a specific ID');
-        throw new error('Error while trying to retrieve a specific ID: ', error)
+        const count = req.get(parseInt(userID));
+        return count.status_usr;
+    } catch (err){
+        console.log('Error while trying to get a user status', err.message);
+        if (db && !db.inTransaction) {
+            throw err;
+        }
     }
 }
+
+
+/**
+ * Gets a username from the user ID
+ * @param {*} userID integer
+ * @returns a string
+ */
+const getNameFromID = (userID) => {
+    try {
+        db = DatabaseManager.getInstance();
+        if (!db){
+            throw new Error('Database is not initialised');
+        }
+        const req = db.prepare('SELECT username_usr FROM cyb_users WHERE id_usr = ?;');
+        const usr = req.get(parseInt(userID));
+        return usr.username_usr;
+    } catch (err){
+        console.log('Error while trying retrieve a username from its ID ', err.message);
+        if (db && !db.inTransaction) {
+            throw err;
+        }
+    }
+}
+
+
+/**
+ * updates a user in the users database
+ * @param {*} userID 
+ * @returns 
+ */
+const updateInUsr = (user) => {
+    try {
+        db = DatabaseManager.getInstance();
+        if (!db){
+            throw new Error('Database is not initialised');
+        }
+        const req = db.prepare('UPDATE cyb_users SET username_usr = ?, password_usr = ?, salt_usr = ?, email_usr = ?, status_usr = ?, role_usr = ? WHERE id_usr = ?;');
+        const usr = req.get(user.username, user.password, user.salt, user.email, user.status, user.role, parseInt(user.id));
+        return usr.username_usr;
+    } catch (err){
+        console.log('Error while trying to update the users table', err.message);
+        if (db && !db.inTransaction) {
+            throw err;
+        }
+    }
+}
+
+/**
+ * Updates the connection table
+ * @param {*} userID 
+ * @param {*} username 
+ * @returns 
+ */
+const updateInCon = (user) => {
+    try {
+        db = DatabaseManager.getInstance();
+        if (!db){
+            throw new Error('Database is not initialised');
+        }
+        const req = db.prepare('UPDATE cyb_connect SET username_con = ? WHERE id_on = ?;');
+        const usr = req.get(user.username, parseInt(user.id));
+        return usr.username_usr;
+    } catch (err){
+        console.log('Error while trying to update the connection table', err.message);
+        if (db && !db.inTransaction) {
+            throw err;
+        }
+    }
+}
+
+
+
+const getPassword = (userID) => {
+    try {
+        db = DatabaseManager.getInstance();
+        if (!db){
+            throw new Error('Database is not initialised');
+        }
+        const req = db.prepare('SELECT username_usr FROM cyb_users WHERE id_usr = ?;');
+        const usr = req.get(parseInt(userID));
+        return usr.username_usr;
+    } catch (err){
+        console.log('Error while trying retrieve a username from its ID ', err.message);
+        if (db && !db.inTransaction) {
+            throw err;
+        }
+    }
+}
+
 
 module.exports = {
     generateSalt,
@@ -226,5 +354,8 @@ module.exports = {
     completeUserDeletion,
     getSalt,
     getID,
+    getUserRole,
     getUserStatus,
+    getAllUsersData,
+    getNameFromID,
 };
