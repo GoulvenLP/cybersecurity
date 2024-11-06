@@ -1,0 +1,1 @@
+[06/11/2024 23:48:44] [SQL ATTACK] [FROM IP= ::ffff:127.0.0.1] (CONTENT=/manage/login)

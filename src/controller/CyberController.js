@@ -1,37 +1,18 @@
+const { getLogs } = require('../services/ThreatDetectionService');
+const { countTypesOfID } = require('../models/FiltersModels');
+const {
+   getUserRole,
+   getUserStatus,
+} = require('../models/ManagersModels');
 const {
     createFlt,
     getFlt,
     updateFlt,
     deleteFlt,
     requesterIsAdmin,
+    requesterIsAnyAllowed,
  } = require('../services/FiltersService');
- const {
-    getUserRole,
-    getUserStatus,
- } = require('../models/ManagersModels')
-const ThreatDetectionService = require('../services/ThreatDetectionService');
-const IncidentsService = require('../services/IncidentsService');
-const { countTypesOfID } = require('../models/FiltersModels');
 
-
-/**
- * Controls if a GET request is a threat or not. If it is the case, triggers an incident with specific data.
- */
-const checkGETRequest = async (req, res, next) => {
-    console.log('Verifying GET content');
-    const threatStatus = await ThreatDetectionService.checkUrl(req);
-    if(threatStatus.threat === true){
-        console.log("Malicious attack detected");
-        res.status(403).json({message: "Threat detected"});
-
-        const incident = IncidentsService.createIncident(req, threatStatus.type);
-        await IncidentsService.sendIncident(incident.toJSON());
-
-    } else {
-        console.log("No threat detected");
-        next();
-    }
-}
 
 /**
  * Creates a new filter from a POST request. Only active admins are allowed to create filters
@@ -52,7 +33,6 @@ const checkGETRequest = async (req, res, next) => {
     } else {
         res.status(401).send('New filter creation failed');
     }
-
  };
 
 
@@ -76,6 +56,7 @@ const checkGETRequest = async (req, res, next) => {
     }
  };
 
+
  /**
   * Updates a filter. Only an active admin can proceed such operation.
   * the update must be introduced into such object: { id, regex, description, typeName }
@@ -98,9 +79,8 @@ const checkGETRequest = async (req, res, next) => {
     if (updated){
         res.status(200).send('Filter updated successfully');
     } else {
-        res.status(401).send('Update on filter failed');
+        res.status(400).send('Update on filter failed');
     }
-
  };
 
 
@@ -132,15 +112,25 @@ const checkGETRequest = async (req, res, next) => {
     if (deleted) {
         res.status(200).send(`Filter ${targetID} deleted successfully`);
     } else {
-        res.status(401).send(`Could not delete filter ${targetID}`);
+        res.status(400).send(`Could not delete filter ${targetID}`);
     }
-
  }
 
+
+const getLogsController = (req, res) => {
+    const allowed = requesterIsAnyAllowed(req.user.id);
+    if (!allowed) {
+        res.status(403).send('You do not have the privileges for such request');
+        return;
+    }
+    const logs = getLogs();
+    res.status(200).send(logs);
+}
+
  module.exports = {
-    checkGETRequest,
     createFilter,
     getFilters,
     updateAFilter,
     deleteFilter,
+    getLogsController,
  }

@@ -3,12 +3,15 @@ const { requesterIsAdmin, requesterIsAnyAllowed } = require('../services/Filters
 const { getUserStatus, getUserRole } = require('../models/ManagersModels');
 const {
     newUser,
-    retrieveUser,
     deleteUserByID,
-    verifyAuthentication,
-    getUserID,
-    getTargetRole,
+    retrieveUser,
     getAllUsers,
+    getUserID,
+    verifyAuthentication,
+    getTargetRole,
+    updateUsr_admin,
+    updateUsr_staff,
+    findIfUserID,
  } = require('../services/ManagersService');
  
  /**
@@ -124,7 +127,7 @@ const disconnect = (req, res) => {
 const getUsers = (req, res) => {
     const authorized = requesterIsAdmin(req.user.id);
     if (!authorized){
-        res.status(401).send('You do not have the privileges for such request');
+        res.status(403).send('You do not have the privileges for such request');
     } else {
         const usersData = getAllUsers();
         res.status(200).send(usersData);
@@ -150,14 +153,21 @@ const updateUser = (req, res) => {
     }
     const role = getUserRole(req.user.id);
     // member of the staff trying to update another member
+    const targetID = req.params.id;
+    // verify that target exists
+    const targetExists = findIfUserID(targetID);
+    if (!targetExists){
+        req.status(400).send('Target not found');
+        return;
+    }
     let update;
     if (role !== 'admin' && req.user.id != req.params.id){
         res.status(403).send('You do not have the privileges for such operation');
         return;
     } else if (role === 'staff' && req.user.id === req.params.id){
-        update = updateUsr_staff({userID: req.user.id, targetID: req.params.id, password: req.body.password, status: req.body.status, role: req.body.role});
-    } else {
-        update = updateUsr_admin(req.body);
+        update = updateUsr_staff({userID: req.user.id, username: req.body.username, targetID: targetID, password: req.body.password, status: req.body.status, role: req.body.role});
+    } else if (role === 'admin'){
+        update = updateUsr_admin({userID: req.user.id, username: req.body.username, targetID: targetID, password: req.body.password, status: req.body.status, role: req.body.role});
     }
     if (update){
         res.status(200).send('User updated successfully');

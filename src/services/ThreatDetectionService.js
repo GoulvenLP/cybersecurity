@@ -1,5 +1,4 @@
 const ThreatDetectionModels = require('../models/ThreatDetectionModels');
-const {InjectionStatus} = require('../models/Incident');
 
 /**
  * Looks for suspicious patterns in a GET request
@@ -19,11 +18,12 @@ const checkUrl = async (req) => {
  * @returns true if a suspicious regular expression was found, else false.
  */
 const checkBody = (jsonObj) => {
+    let threatStatus;
     for (const field of Object.keys(jsonObj)){
         const fieldValue = jsonObj[field] ? jsonObj[field].toString() : ""; 
-        const threatStatus = checkIfInjection(fieldValue);
+        threatStatus = checkIfInjection(fieldValue);
         if (threatStatus.threat === true){
-            return new InjectionStatus(true, isThreat);
+            return threatStatus
         }
     }
     return threatStatus;
@@ -34,22 +34,36 @@ const checkBody = (jsonObj) => {
  * Tests different patterns on a given string, to verify if they both
  *  match. A pattern corresponds to a filter to detect malicious attacks
  * @param {} stringValue : a string sent by a user.
- * @returns an InjectionStatus object.
+ * @returns a JSON object containing a status on the threat: if it is true there is 
+ * a threat, otherwise not; and the type of threat.
+ * If there was no threat detected, this field is null.
  */
 const checkIfInjection = (stringValue) => {
     const patterns = ThreatDetectionModels.getRegularExpressions();
     for (const pattern of patterns){
-        const p = new RegExp(pattern.regex_ftr, "gi");
+        const p = new RegExp(pattern.regex, "gi");
         if(stringValue.match(p)){
-            return new InjectionStatus(true, pattern.type_typ);
+            return { threat: true, type: pattern.type };
         }
     }
-    return new InjectionStatus(false, null);
+    return { attack: false, type: null };
 };
+
+
+/**
+ * Gets and returns all logs from the log file.
+ * Only an activated user can access the logs
+ * @returns a string.
+ */
+const getLogs = () => {
+    const logs = ThreatDetectionModels.getAllLogs();
+    return logs;
+}
 
 
 // exported modules
 module.exports = {
     checkUrl,
     checkBody,
+    getLogs,
 };

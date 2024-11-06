@@ -8,7 +8,7 @@ const fs = require('fs');
  * @param {} someEvent 
  */
 const registerAction = (someEvent) => {
-    const logFilePath = path.join(__dirname, '../../logs.txt');
+    const logFilePath = path.join(__basedir, 'logs.txt');
     try {
         fs.readFile(logFilePath, 'utf8', (err, data) => {
             if (err){

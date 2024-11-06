@@ -4,7 +4,6 @@ const path = require('path');
 
 
 class DatabaseManager {
-    
     /**
      * Singleton pattern to make sure the database is initialised only once!
      */
@@ -30,9 +29,9 @@ class DatabaseManager {
 
     initializeDB = () => {
         try {
-            this._db = new Database('database.db');
-            const sql = fs.readFileSync(path.join(__dirname, './database.sql'), 'utf8');
-            this._db.exec(sql);
+            this._db = new Database(path.join(__basedir, 'database', 'database.db'));
+            const better_slite3 = fs.readFileSync(path.join(__basedir, 'src/config', 'database.sql'), 'utf8');
+            this._db.exec(better_slite3);
             console.log('Database initialised successfully');
             return this._db;
         } catch (error) {

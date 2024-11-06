@@ -1,13 +1,15 @@
 require('dotenv').config(); //for an access to secret file
 const cookieParser = require('cookie-parser');
-
+const path = require('path');
+global.__basedir = path.join(__dirname, '../'); // define the root project
 const express = require('express');
 const cyberRoutes = require('./routes/cyberRoutes')
 const manageRoutes = require('./routes/manageRoutes');
+const managersController = require('./controller/ManagersController');
 const {connectProducer, disconnectProducer} = require('./models/IncidentProducerModel');
 const { runConsumer } = require('./models/IncidentConsumerModel');
 const fs = require('fs');
-const Database = require('better-sqlite3');
+const middlewares = require('./utils/middlewares')
 const {DatabaseManager} = require('./config/db');
 //const cors = require('cors'); //TODO: reactivate?
 
@@ -19,9 +21,8 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-//app.use(cors());              //TODO: reactivate?
 
-
+// launch producer
 const startProducer = async () => {
     try {
         await connectProducer();
@@ -29,7 +30,6 @@ const startProducer = async () => {
         console.error('Failed to connect the producer: ', error);
     }
 }
-
 
 // launch consumer
 const startConsumer = async () => {
@@ -41,8 +41,7 @@ const startConsumer = async () => {
     }
 };
 
-
-//filter favicon.ico requests
+//filter favicon.ico requests that may parasite the API
 app.use((req, res, next) => {
     if (req.url === '/favicon.ico'){
         res.status(204).end();
@@ -52,9 +51,10 @@ app.use((req, res, next) => {
 });
 
 
-// Routes
-app.use("/manage", manageRoutes);
-app.use("/", cyberRoutes);
+// Routes & middleware
+app.post("/manage/login", middlewares.checkRequest, managersController.connect); // token not alreay in place
+app.use("/manage", middlewares.authenticateToken, middlewares.checkRequest, manageRoutes);
+app.use("/", middlewares.authenticateToken, middlewares.checkRequest, cyberRoutes);
 
 
 app.listen(4500, () => {

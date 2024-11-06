@@ -1,0 +1,41 @@
+networks:
+  kafka-network:
+
+services:
+  kafka:
+    image: 'apache/kafka:3.8.1'  # image compatible with KRaft
+    container_name: kafka-kraft
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093" 
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,CONTROLLER://kafka:9093"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"  # auto generate topics if necessary
+    volumes:
+      - kafka_data:/var/lib/kafka/data  # Persistency
+    ports:
+      - "9092:9092"  # accessible port for the API
+    networks:
+      - kafka-network
+
+  api:
+    build: .
+    container_name: cybersecurity_cont
+    ports:
+      - 4500:4500
+    depends_on:
+      - kafka  # Launch kafka BEFORE the API
+    environment:
+      KAFKA_BROKER: "kafka:9092"  # connection point for the API to reach Kafka
+    networks:
+      - kafka-network
+
+volumes:
+  kafka_data:

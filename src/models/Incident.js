@@ -36,23 +36,7 @@ class Get {
 
 /*----------------------------------------------------- */
 
-class InjectionStatus {
-    constructor(status, type){
-        this.threat = status;
-        this.type = type;
-    }
-
-    toJSON(){
-        return {
-            threat: this.threat,
-            type: this.type
-        }
-    }
-}
-
-
 module.exports = {
     Incident,
     Get,
-    InjectionStatus,
 }

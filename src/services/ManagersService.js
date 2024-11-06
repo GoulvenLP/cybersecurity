@@ -143,7 +143,10 @@ const getAllUsers = () => {
 const updateUsr_admin = (update) => {
     // manage username
     let username = getNameFromID(update.targetID);
-    if (update.username !== ''){ //username changed
+    console.log('USERNAME : ', username);
+    console.log("UPDATE USERNAME: ", update.username);
+    if (update.username !== ""){ //username changed
+        console.log("WE DO ENTER THERE???");
         if (username !== update.username){ //if the username has changed -> verify if it is not already in the database
             number = countUsername(username);
             if (number === 1){ //there is already a user with that name
@@ -189,7 +192,8 @@ const updateUsr_admin = (update) => {
             status = userData.status;
         }
     }
-    updateAUser({ id: update.targetID, password: credentials.password, salt: credentials.salt, email: email, role: role, status: status });
+    updateInUsr({ id: update.targetID, username: username, password: credentials.password, salt: credentials.salt, email: email, role: role, status: status });
+    updateInCon({ id: update.targetID, username: username });
     return true;
 }
 
@@ -233,7 +237,8 @@ const updateUsr_staff = (update) => {
     }
    const role = userData.role;
    const status = userData.role
-    updateAUser({ id: update.targetID, password: credentials.password, salt: credentials.salt, email: email, role: role, status: status });
+   updateInUsr({ id: update.targetID, username: username, password: credentials.password, salt: credentials.salt, email: email, role: role, status: status });
+   updateInCon({ id: update.targetID, username: username });
     return true;
 }
 
