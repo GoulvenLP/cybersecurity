@@ -4,7 +4,7 @@ networks:
 services:
   kafka:
     image: 'apache/kafka:3.8.1'  # image compatible with KRaft
-    container_name: kafka-kraft
+    container_name: kafka_kraft
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: "broker,controller"

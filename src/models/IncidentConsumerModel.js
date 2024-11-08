@@ -8,7 +8,7 @@ const {manage} = require('../services/ResponseService');
 
 const kafka = new Kafka({
     clientId: 'my-app',
-    brokers: ['127.0.0.1:9092'], //kafa address
+    brokers: ['kafka_kraft:9092'], //change when dockerized
 });
 
 const consumer = kafka.consumer({groupId: 'incident_group'});

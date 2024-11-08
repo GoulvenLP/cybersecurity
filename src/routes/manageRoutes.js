@@ -3,7 +3,6 @@ const router = express.Router();
 const managersController = require('../controller/ManagersController');
 
 
-// router.post('/login', managersController.connect);
 router.get('/logout', managersController.disconnect);
 
 router.post('/create', managersController.createUser);

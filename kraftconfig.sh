@@ -3,7 +3,7 @@
 
 
 # container name
-CONTAINER_NAME="kafka-kraft"
+CONTAINER_NAME="kafka_kraft"
 KAFKA_IMAGE="apache/kafka:3.8.1"
 TOPIC_INCIDENTS="incidents"
 
@@ -20,7 +20,7 @@ fi
 
 # Run Kafka in KRaft mode
 docker run -d \
-  --name kafka-kraft \
+  --name kafka_kraft \
     -p 9092:9092 \
     -p 9093:9093 \
     -e KAFKA_KRAFT_MODE=true \

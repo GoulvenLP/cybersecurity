@@ -3,12 +3,18 @@ FROM alpine:3.15
 # working directory for the app
 WORKDIR /app
 
+# prepare downgrade of privileges
+RUN addgroup -S node && adduser -S -G node node
+# downgrade global privileges
+
 # copy targeted files
-COPY package*.json /app
-COPY docker-compose.yml /app
-COPY src/ /app/src
-COPY logs.txt /app
-COPY database/database.db /app/database
+COPY --chown=node:node package*.json /app
+COPY --chown=node:node docker-compose.yml /app
+COPY --chown=node:node src/ /app/src
+COPY --chown=node:node logs.txt /app
+RUN mkdir /app/database
+RUN chown node:node /app/database
+# COPY --chown=node:node database/database.db /app/database/
 
 # install required components
 RUN apk update
@@ -27,15 +33,8 @@ EXPOSE 4500
 RUN chmod 775 /app/logs.txt
 RUN chmod -R 775 /app/database
 
-# prepare downgrade of privileges
-RUN addgroup -S node && adduser -S -G node node
-
-# change the file owner so that node group can have extra privileges
-RUN chown -R node:node /app/database
-
-# downgrade global privileges
+# downgrade privileges
 USER node
-
 
 # launch the API
 CMD ["node", "src/index.js"]

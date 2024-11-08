@@ -3,7 +3,7 @@ const { Kafka } = require('kafkajs');
 // Create Kafka client
 const kafka = new Kafka({
     clientId: 'incidents_service',
-    brokers: ['127.0.0.1:9092'],    // Change when dockerised
+    brokers: ['kafka_kraft:9092'],    // Change when dockerised
 });
 
 // Create a single producer instance
