@@ -11,7 +11,10 @@ const kafka = new Kafka({
     brokers: ['kafka_kraft:9092'], //change when dockerized
 });
 
-const consumer = kafka.consumer({groupId: 'incident_group'});
+const consumer = kafka.consumer({
+    groupId: 'incident_group',
+    fetchMinBytes: 1
+});
 
 
 /**

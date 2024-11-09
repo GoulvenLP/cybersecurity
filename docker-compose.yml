@@ -6,6 +6,8 @@ services:
   kafka:
     image: 'apache/kafka:3.8.1'  # Image compatible with KRaft
     container_name: kafka_kraft
+    env_file:
+      - .env
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: "broker,controller"
@@ -28,8 +30,15 @@ services:
       - kafka-network
     command: >
       sh -c "
-         # Start Kafka
-        /opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/kraft/server.properties &
+        # Format the storage for Kafka in KRaft mode if meta.properties does not exist
+        if [ ! -f /var/lib/kafka/data/meta.properties ]; then
+          echo 'Formatting storage for KRaft mode...'
+          KAFKA_UUID=$(uuidgen)
+          /opt/kafka/bin/kafka-storage.sh format -t ${KAFKA_UUID} -c /opt/kafka/config/kraft/server.properties
+        fi;
+
+        # Start Kafka server
+        /opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/kraft/server.properties
         
         # Wait for Kafka to be ready
         KAFKA_PID=$$!
@@ -46,7 +55,7 @@ services:
         "
 
     healthcheck:
-      test: ["CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "kafka-kraft:9092"]
+      test: ["CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "kafka_kraft:9092"]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -60,10 +69,16 @@ services:
       - 4500:4500
     depends_on:
       - kafka  # Launch Kafka before the API
+    volumes:
+      - better_sqlite3_data:/app/database # create a volume to keep the DB and make it evolve outside of the API
+    env_file:
+      - .env
     environment:
+      DATABASE_FILE: /app/database/database.db
       KAFKA_BROKER: "kafka_kraft:9092"  # Connection point for the API toward Kafka
     networks:
       - kafka-network
 
 volumes:
   kafka_data:
+  better_sqlite3_data:

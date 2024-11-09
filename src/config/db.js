@@ -29,7 +29,8 @@ class DatabaseManager {
 
     initializeDB = () => {
         try {
-            this._db = new Database(path.join(__basedir, 'database', 'database.db'));
+            const dbPath = process.env.DATABASE_FILE || path.join(__basedir, 'database', 'database.db');
+            this._db = new Database(dbPath);
             const better_slite3 = fs.readFileSync(path.join(__basedir, 'src/config', 'database.sql'), 'utf8');
             this._db.exec(better_slite3);
             console.log('Database initialised successfully');
