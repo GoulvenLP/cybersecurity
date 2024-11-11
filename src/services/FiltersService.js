@@ -25,6 +25,9 @@ const { getUserRole, getUserStatus } = require('../models/ManagersModels');
  * @param {*} f 
  */
 const createFlt = (newf) => {
+    if (!newf || newf == null){
+        return false;
+    }
     let typeID = getIDofType(newf.type);
     const userID = newf.userID;
     //type does not exist in the DB -> create it
@@ -99,6 +102,9 @@ const getFlt = (req) => {
  */
 const updateFlt = (newFilter) => {
     // Verify if the filter exists
+    if (!newFilter || newFilter == null){
+        return false;
+    }
     const nb = countFilterID(newFilter.id);
     if (nb === 0){
         return false;

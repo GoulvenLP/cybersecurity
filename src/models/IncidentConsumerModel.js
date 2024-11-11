@@ -7,7 +7,7 @@ const {manage} = require('../services/ResponseService');
 
 
 const kafka = new Kafka({
-    clientId: 'my-app',
+    clientId: 'incidents_service',
     brokers: ['kafka_kraft:9092'], //change when dockerized
 });
 

@@ -24,11 +24,14 @@ function authenticateToken(req, res, next) {
  * Controls if a GET request is a threat or not. If it is the case, triggers an incident with specific data.
  */
 const checkRequest = async (req, res, next) => {
-    console.log('Verifying GET content');
+    console.log('Verifying the integrity of the request');
     const threatInUrl = ThreatDetectionService.checkUrl(req);
     let threatInBody = {threat: false, type: null };
     if (req.body){ // presence of a body
         threatInBody = ThreatDetectionService.checkBody(req.body);
+        if (!threatInBody || !(threatInBody.hasOwnProperty('threat'))){
+            threatInBody = {threat: false, type: null};
+        }
     }
     // check the url
     if(threatInUrl.threat || threatInBody.threat){

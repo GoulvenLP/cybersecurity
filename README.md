@@ -130,7 +130,7 @@ Send a **PUT** request to `/filters/create/ID` where `ID` is the targeted filter
 ### 5.3. Retrieve a filter
 Send a **GET** request to `/filters/ID` where `ID` is the targeted user.
 
-### 5.2. Retrieve all filters
+### 5.4. Retrieve all filters
 Send a **GET** request to `/filters/`
 
 ### 5.5. Delete a filter

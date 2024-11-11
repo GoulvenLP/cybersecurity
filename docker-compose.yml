@@ -11,6 +11,7 @@ services:
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_ADVERTISED_HOST_NAME: kafka_kraft
       KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka_kraft:9093"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
       KAFKA_LISTENERS: "PLAINTEXT://kafka_kraft:9092,CONTROLLER://kafka_kraft:9093"
@@ -20,7 +21,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_LOG_DIRS: "/var/lib/kafka/data"
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     volumes:
       - kafka_data:/var/lib/kafka/data  # Persistency
     ports:
@@ -33,7 +34,7 @@ services:
         # Format the storage for Kafka in KRaft mode if meta.properties does not exist
         if [ ! -f /var/lib/kafka/data/meta.properties ]; then
           echo 'Formatting storage for KRaft mode...'
-          KAFKA_UUID=$(uuidgen)
+          # KAFKA_UUID=$(uuidgen)
           /opt/kafka/bin/kafka-storage.sh format -t ${KAFKA_UUID} -c /opt/kafka/config/kraft/server.properties
         fi;
 
@@ -78,6 +79,7 @@ services:
       KAFKA_BROKER: "kafka_kraft:9092"  # Connection point for the API toward Kafka
     networks:
       - kafka-network
+
 
 volumes:
   kafka_data:

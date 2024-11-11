@@ -4,14 +4,14 @@ const path = require('path');
 global.__basedir = path.join(__dirname, '../'); // define the root project
 const express = require('express');
 const cyberRoutes = require('./routes/cyberRoutes')
+const middlewares = require('./utils/middlewares')
 const manageRoutes = require('./routes/manageRoutes');
+const cyberController = require('./controller/CyberController');
 const managersController = require('./controller/ManagersController');
 const {connectProducer, disconnectProducer} = require('./models/IncidentProducerModel');
 const { runConsumer } = require('./models/IncidentConsumerModel');
 const fs = require('fs');
-const middlewares = require('./utils/middlewares')
 const {DatabaseManager} = require('./config/db');
-//const cors = require('cors'); //TODO: reactivate?
 
 const dbManager = DatabaseManager.getInstance();
 
@@ -24,12 +24,17 @@ app.use(express.urlencoded({ extended: true }));
 
 // launch producer
 const startProducer = async () => {
-    try {
-        await connectProducer();
-    } catch (error) {
-        console.error('Failed to connect the producer: ', error);
+    let connected = false;
+    while (!connected){
+        try {
+            await connectProducer();
+            connected = true;
+        } catch (error) {
+            console.error('Failed to connect the producer: ', error);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
     }
-}
+};
 
 // launch consumer
 const startConsumer = async () => {
@@ -52,10 +57,11 @@ app.use((req, res, next) => {
 
 
 // Routes & middleware
+app.get("/logs", middlewares.authenticateToken, middlewares.checkRequest, cyberController.getLogsController);
 app.post("/manage/login", middlewares.checkRequest, managersController.connect); // token not alreay in place
 app.use("/manage", middlewares.authenticateToken, middlewares.checkRequest, manageRoutes);
-app.use("/", middlewares.authenticateToken, middlewares.checkRequest, cyberRoutes);
-
+app.use("/filters(/.*)*", middlewares.authenticateToken, middlewares.checkRequest);
+app.use("/*", middlewares.checkRequest); // all other requests are just controlled
 
 app.listen(4500, () => {
     console.log("Server listening on port 4500");

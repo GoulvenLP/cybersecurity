@@ -32,6 +32,9 @@ const newUser = (newUser) => {
         if (!db){
             throw new Error('Database is not initialised');
         }
+        if (!newUser || newUser == null){
+            return false;
+        }
         const sameUserName = countUsername(newUser.username);
         // username already used in the database
         if (parseInt(sameUserName.count) !== 0){

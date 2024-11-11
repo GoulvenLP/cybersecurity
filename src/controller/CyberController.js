@@ -27,10 +27,13 @@ const {
         return;
     }
     const request = {userID: userID, regex: req.body.regex, description: req.body.description, type: req.body.type};
+    console.log(`Request for creating a new filter by user ${userID}`);
     const created = createFlt(request);
     if (created){
+        console.log(`New filter created by user ${userID}`);
         res.status(200).send('New filter created successfully');
     } else {
+        console.log(`New filter creation failed for user ${userID}`);
         res.status(401).send('New filter creation failed');
     }
  };
@@ -48,10 +51,13 @@ const {
         res.status(403).send('You do not have the privileges to access this request');
         return;
     }
+    console.log('Request for getting all filters');
     const filters = getFlt(req);
     if (filters !== null){
+        console.log('Getting filters succeeded');
         res.status(200).send(filters);
     } else {
+        console.log('Unauthorized access');
         res.status(403).send("Unauthorized access");
     }
  };
@@ -75,10 +81,13 @@ const {
         res.status(401).send('Filter to update not found');
         return;
     }
+    console.log(`Request for update on filter ${req.params.id} by user ${userID}`);
     const updated = updateFlt({id: req.params.id, regex: req.body.regex, description: req.body.description, typeName: req.body.typeName, userID: req.user.id});
     if (updated){
+        console.log('Filter updated successfully');
         res.status(200).send('Filter updated successfully');
     } else {
+        console.log('Update on filter failed');
         res.status(400).send('Update on filter failed');
     }
  };
@@ -101,6 +110,7 @@ const {
         res.status(500).send('Argument missing');
         return;
     }
+    console.log(`Request for deleting filter ${targetID} by user ${requesterID}`);
     const userRole = getUserRole(requesterID);
     //allow only admins to create filters
     if (userRole === 'staff') {
@@ -110,8 +120,10 @@ const {
     //a user cannot delete himself
     const deleted = deleteFlt(targetID);
     if (deleted) {
+        console.log(`Filter ${targetID} deleted successfully by user ${requesterID}`);
         res.status(200).send(`Filter ${targetID} deleted successfully`);
     } else {
+        console.log(`Filter ${targetID} was not deleted`);
         res.status(400).send(`Could not delete filter ${targetID}`);
     }
  }
@@ -120,9 +132,11 @@ const {
 const getLogsController = (req, res) => {
     const allowed = requesterIsAnyAllowed(req.user.id);
     if (!allowed) {
+        console.log(`Request to get logs was not allowed for user ${req.user.id}`);
         res.status(403).send('You do not have the privileges for such request');
         return;
     }
+    console.log(`Request to get logs for user of id ${req.user.id}`);
     const logs = getLogs();
     res.status(200).send(logs);
 }

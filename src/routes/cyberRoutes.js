@@ -6,6 +6,6 @@ router.delete("/filters/delete/:id", cyberController.deleteFilter);
 router.post("/filters/create", cyberController.createFilter);
 router.put("/filters/:id", cyberController.updateAFilter);
 router.get("/filters", cyberController.getFilters);
-router.get("/logs", cyberController.getLogsController);
+
 
 module.exports = router;
