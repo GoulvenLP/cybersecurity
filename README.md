@@ -13,39 +13,50 @@ Additionnally, there are other related services:
 
 # Steps
 ## 1. Configuration
-No special configuration is required
-
-
-The git version of the project can be found in :
+Retrieve the API via github:
 ```
-https://github.com/GoulvenLP/cybersecurity.git
+git clone https://github.com/GoulvenLP/cybersecurity.git
 ```
-If you want to run the API through the git version you will need to configure this part:
-- create a `.env` file at the root of the project
+
+The project has been configured for a dockerized project, so running `npm run start` will result soon or late into errors.
+
+You also need to configure one file:
+- create a `.env` file at the root of the project in `cybersecurity/`
 - fill the `.env` file with two variables: **JWT_SECRET** and **KAFKA_UUID**.
-  - The JWT_SECRET will serve create authentication tokens
-  - The KAFKA_UUID has to be a V4 UUID. You can generate one with an online tool like `https://www.uuidgenerator.net/version4` for instance.
 
-To summarize, you must create a `.env` file with:
 ```
 JWT_SECRET=someSecretHere
 KAFKA_UUID=aV4UuidThere
 ```
 
+  - The JWT_SECRET will be used to create authentication tokens
+  - The KAFKA_UUID has to be a V4 UUID. You can generate one with an online tool like `https://www.uuidgenerator.net/version4` for instance.
+
+
+Then, make sure you have docker installed on your system
+```
+sudo apt update
+sudo apt-get install docker
+```
 ## 2. Running the API
-### 2.1 Using Docker
-
+ Finally dockerize your application and run it
 ```
-
+docker compose up --build
 ```
+The API will autoload from then, it may take a while (around 3 minutes) because of the dependencies installation and containerization of the API.
+
+
 
 ## 3. Using the API
 ### 3.1 Connect to the API
-For now there are two available profiles, responding to the pattern `username:password`
-- cyberadmin:cyberadmin
-- toto:toto1234
+There are two default profiles already configured in the API:
 
-cyberadmin is an admin while toto is a staff member.
+|username|password|role|
+|--|--|--|
+|cyberadmin|cyberadmin|admin|
+|toto|toto1234|staff|
+
+Both accounts are activated. An administrator and a staff member do not have the same privileges. This will be precised for the different services.
 
 Do not forget to change the avatar names and passwords once you have taken control of them.
 
