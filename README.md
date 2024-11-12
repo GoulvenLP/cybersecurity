@@ -151,3 +151,6 @@ Send a **DELETE** request to `/filters/delete/ID` where `ID` is the targeted use
 The log file references all threat attempts. At the top of the file are found the most recent threats while the bottom exposes the oldest threats.
 
 Send a **GET** request to `/logs`
+
+## 7. Passwords management
+The passwords stored in the database are submitted to a radomly-created salt sequence and then hashed do SHA-512. The hashed version is stored in the database.
